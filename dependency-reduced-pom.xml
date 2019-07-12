@@ -18,7 +18,7 @@
             <configuration>
               <transformers>
                 <transformer>
-                  <mainClass>core.NettyServer</mainClass>
+                  <mainClass>server.NettyServer</mainClass>
                 </transformer>
               </transformers>
             </configuration>
