@@ -6,7 +6,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.log4j.Logger;
 
 /**
- * 给客户端使用的serverHanler
+ * 客户端的Handler
  */
 public class StringServerHandler extends SimpleChannelInboundHandler<String> {
     private static final Logger log = Logger.getLogger(MessageServerHandler.class);

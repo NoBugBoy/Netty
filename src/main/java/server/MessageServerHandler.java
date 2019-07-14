@@ -12,6 +12,9 @@ import java.net.SocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * web端的Handler
+ */
 public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
     private static final Logger log = Logger.getLogger(MessageServerHandler.class);
     private WebSocketServerHandshaker handshaker;

@@ -19,16 +19,18 @@ public class NioWebSocketChannelInit extends ChannelInitializer<SocketChannel>{
 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
+        //-----------web-------------
         ch.pipeline().addLast("logging",new LoggingHandler("DEBUG"));
         ch.pipeline().addLast("http-codec",new HttpServerCodec());
-//        ch.pipeline().addLast("framer", new DelimiterBasedFrameDecoder(1024, Delimiters.lineDelimiter()));
         ch.pipeline().addLast("stringEncoder", new StringEncoder(CharsetUtil.UTF_8));
         ch.pipeline().addLast("stringDecoder", new StringDecoder(CharsetUtil.UTF_8));
         ch.pipeline().addLast("aggregator",new HttpObjectAggregator(102400));
         ch.pipeline().addLast("http-chunked",new ChunkedWriteHandler());
-       // ch.pipeline().addLast("web-compress",new WebSocketServerCompressionHandler());
-//        ch.pipeline().addLast(new WebSocketServerProtocolHandler("/websocket"));
         ch.pipeline().addLast("handler",new MessageServerHandler());
-//        ch.pipeline().addLast("handler",new StringServerHandler());
+        //-----------客户端--------------
+        //ch.pipeline().addLast("framer", new DelimiterBasedFrameDecoder(1024, Delimiters.lineDelimiter()));
+        //ch.pipeline().addLast("web-compress",new WebSocketServerCompressionHandler());
+        //ch.pipeline().addLast(new WebSocketServerProtocolHandler("/websocket"));
+        //ch.pipeline().addLast("handler",new StringServerHandler());
     }
 }
