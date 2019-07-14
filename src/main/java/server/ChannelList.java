@@ -15,21 +15,33 @@ import java.util.stream.Collectors;
 
 public class ChannelList {
     private static ChannelGroup globalGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private static Map<String,ChannelId> channelIdMap= new ConcurrentHashMap<>();
+
+    /**
+     * 添加channel
+     * @param channel
+     */
     public  static void add(Channel channel){
         globalGroup.add(channel);
-        channelIdMap.put(channel.id().asShortText(),channel.id());
     }
+    /**
+     * 移除channel
+     * @param channel
+     */
     public static void remove(Channel channel){
         globalGroup.remove(channel);
-        channelIdMap.remove(channel.id().asShortText());
     }
-    public static Channel getChannel(String id){
-        return globalGroup.find(channelIdMap.get(id));
-    }
+
+    /**
+     * 推给所有已建立连接的channel
+     * @param tws
+     */
     public static void sendAll(WebSocketFrame tws){
         globalGroup.writeAndFlush(tws);
     }
+    /**
+     * 推给某个ID
+     * @param tws
+     */
     public static void sendToId(TextWebSocketFrame tws,String id){
         for (Channel channel : globalGroup) {
             String s = channel.id().asShortText();
@@ -39,19 +51,21 @@ public class ChannelList {
             }
         }
     }
+
+    /**
+     * 当前在线人数
+     * @return
+     */
     public static int size(){
         return globalGroup.size();
     }
+
+    /**
+     * 获得所有channel
+     * @return
+     */
     public static List<Channel>  getAll(){
         List<Channel> collect = globalGroup.stream().collect(Collectors.toList());
         return collect;
-    }
-
-    public static void sendAllButMe(String tws,String id) {
-        channelIdMap.forEach((x,y) -> {
-            if(!x.equals(id)){
-                globalGroup.find(y).writeAndFlush(new TextWebSocketFrame(tws));
-            }
-        });
     }
 }

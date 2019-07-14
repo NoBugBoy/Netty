@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
+import server.ChannelStringList;
 import web.service.ConnService;
 
 import javax.servlet.ServletException;
@@ -20,7 +21,7 @@ public class MessageController extends HttpServlet{
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String msg = req.getParameter("msg");
-       // ChannelStringList.sendAll(msg);
+        ChannelStringList.sendAll(msg);
         ConnService instance = injector.getInstance(ConnService.class);
         instance.addConn("123");
     }

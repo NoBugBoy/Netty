@@ -3,8 +3,13 @@ package server;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import org.apache.log4j.Logger;
 
+/**
+ * 给客户端使用的serverHanler
+ */
 public class StringServerHandler extends SimpleChannelInboundHandler<String> {
+    private static final Logger log = Logger.getLogger(MessageServerHandler.class);
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
         Channel channel = ctx.channel();
@@ -12,7 +17,7 @@ public class StringServerHandler extends SimpleChannelInboundHandler<String> {
             if(channel !=ch){
                 ch.writeAndFlush(channel.remoteAddress() +" 发送的消息:" +msg+" \n");
             }else{
-                ch.writeAndFlush(" 【自己】"+msg +" \n");
+                ch.writeAndFlush(" 自己"+msg +" \n");
             }
         });
     }
@@ -25,6 +30,7 @@ public class StringServerHandler extends SimpleChannelInboundHandler<String> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         Channel channel = ctx.channel();
+
         System.out.println(channel.remoteAddress() +" 上线了");
     }
 
@@ -38,7 +44,6 @@ public class StringServerHandler extends SimpleChannelInboundHandler<String> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable e) throws Exception {
         Channel channel = ctx.channel();
         ChannelStringList.remove(channel);
-        System.out.println("[" + channel.remoteAddress() + "] leave the room");
         ctx.close().sync();
     }
 }

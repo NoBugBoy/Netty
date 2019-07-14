@@ -30,8 +30,8 @@ public class NettyServer {
             serverBootstrap.group(bossGroup,workGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new NioWebSocketChannelInit())
-//            .option(ChannelOption.SO_BACKLOG,128)
-//            .childOption(ChannelOption.TCP_NODELAY,true)
+            .option(ChannelOption.SO_BACKLOG,128)
+            .childOption(ChannelOption.TCP_NODELAY,true)
             .childOption(ChannelOption.SO_KEEPALIVE,true).option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10 * 1000);
 
             ChannelFuture f = serverBootstrap.bind(port).sync();

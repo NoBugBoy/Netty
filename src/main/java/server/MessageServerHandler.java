@@ -18,17 +18,18 @@ public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
-
         if(msg instanceof FullHttpRequest){
-            log.info("http握手:{}"+msg);
+            log.info("http握手:"+msg);
             //第一次请求进来 http握手
             handleHttpRequest(ctx, (FullHttpRequest) msg);
         }else if(msg instanceof WebSocketFrame){
-            //websocket 请求
-            log.info("websocket msg :{}" + msg);
-            handlerWebSocketFrame(ctx, (WebSocketFrame) msg);
+            if(msg instanceof TextWebSocketFrame){
+                textWebSocketFrame(ctx,(TextWebSocketFrame)msg);
+            }else{
+                handlerWebSocketFrame(ctx, (WebSocketFrame) msg);
+            }
         }else if(msg instanceof BinaryWebSocketFrame){
-            log.info("二进制websocket msg :{}"+msg);
+            log.info("二进制websocket msg :"+msg);
             handlerBinaryWebSocketFrame(ctx, (BinaryWebSocketFrame) msg);
         }else{
             log.info("unknow msg ...");
@@ -49,7 +50,6 @@ public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
         log.info("客户端加入连接："+ctx.channel().id()+"ip:"+s);
         ChannelList.add(ctx.channel());
         ChannelList.sendAll(new TextWebSocketFrame("全网公布： 欢迎"+ctx.channel().remoteAddress().toString()+"加入!\r\n当前在线人数："+ChannelList.size()));
-        sendList();
     }
 
     @Override
@@ -57,7 +57,6 @@ public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
         log.info("客户端断开连接："+ctx.channel().id());
         ChannelList.sendAll(new TextWebSocketFrame("全网公布： "+ctx.channel().remoteAddress().toString()+"断开了连接！"));
         ChannelList.remove(ctx.channel());
-        sendList();
     }
 
     @Override
@@ -85,41 +84,24 @@ public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
 
         ctx.writeAndFlush(new BinaryWebSocketFrame(byteBuf));
     }
-    private void handlerWebSocketFrame(ChannelHandlerContext ctx,WebSocketFrame frame){
-        ByteBuf content = frame.content();
-        if(content.readByte() <= 0){
-            handlerBinaryWebSocketFrame(ctx, (BinaryWebSocketFrame) frame);
-            return;
-        }
-        if(frame instanceof CloseWebSocketFrame){
-            log.info("服务器收到CloseWebSocketFrame......");
-            //关闭
-            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
-            return;
-        }
-        if(frame instanceof PingWebSocketFrame){
-            //ping消息
-            ctx.channel().write(new PongWebSocketFrame(frame.content()).retain());
-            return;
-        }
-        if(frame instanceof TextWebSocketFrame){
-            String text = ((TextWebSocketFrame) frame).text();
-            log.info("服务器收到消息为:"+text);
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
+    public void textWebSocketFrame(ChannelHandlerContext ctx,TextWebSocketFrame frame){
+        String text =  frame.text();
+        log.info("服务器收到消息为:"+text);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm:ss");
 
-            if(text.indexOf("_")>0 && text.split("_").length>0){
-                ChannelList.getAll().forEach(channel -> {
-                    if(channel == ctx.channel()){
-                        TextWebSocketFrame mytws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text.split("_")[1]);
-                        channel.writeAndFlush(mytws);
-                    }else{
-                        if(channel.id().asShortText().equals(text.split("_")[0])){
-                            TextWebSocketFrame tws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+ctx.channel().remoteAddress().toString()+" : " + text.split("_")[1]);
-                            channel.writeAndFlush(tws);
-                        }
-
+        if(text.indexOf("_")>0 && text.split("_").length>0){
+            ChannelList.getAll().forEach(channel -> {
+                if(channel == ctx.channel()){
+                    TextWebSocketFrame mytws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text.split("_")[1]);
+                    channel.writeAndFlush(mytws);
+                }else{
+                    if(channel.id().asShortText().equals(text.split("_")[0])){
+                        TextWebSocketFrame tws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+ctx.channel().remoteAddress().toString()+" : " + text.split("_")[1]);
+                        channel.writeAndFlush(tws);
                     }
-                });
+
+                }
+            });
 //                if(text.split("_")[0].equals(ctx.channel().id().asShortText())){
 //                    TextWebSocketFrame tws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text.split("_")[1]);
 //                    ChannelList.sendToId(tws,text.split("_")[0]);
@@ -128,26 +110,39 @@ public class MessageServerHandler extends SimpleChannelInboundHandler<Object> {
 //                    ChannelList.sendToId(tws,text.split("_")[0]);
 //
 //                }
+        }else{
+            if("myip".equals(text)){
+                TextWebSocketFrame tws = new TextWebSocketFrame("myip_"+ctx.channel().remoteAddress().toString());
+                ctx.writeAndFlush(tws);
             }else{
-                if("myip".equals(text)){
-                    TextWebSocketFrame tws = new TextWebSocketFrame("myip_"+ctx.channel().remoteAddress().toString());
-                    ctx.writeAndFlush(tws);
-                }else{
-                    ChannelList.getAll().forEach(channel -> {
-                        if(channel == ctx.channel()){
-                            TextWebSocketFrame mytws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text);
-                            channel.writeAndFlush(mytws);
-                        }else{
-                            TextWebSocketFrame tws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+ctx.channel().remoteAddress().toString()+" : " + text);
-                            channel.writeAndFlush(tws);
-                        }
-                    });
+                ChannelList.getAll().forEach(channel -> {
+                    if(channel == ctx.channel()){
+                        TextWebSocketFrame mytws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text);
+                        channel.writeAndFlush(mytws);
+                    }else{
+                        TextWebSocketFrame tws = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+ctx.channel().remoteAddress().toString()+" : " + text);
+                        channel.writeAndFlush(tws);
+                    }
+                });
 //                    String msg = simpleDateFormat.format(new Date())+"   "+ctx.channel().remoteAddress().toString()+" : " + text;
 //                    ChannelList.sendAllButMe(msg,ctx.channel().id().asShortText());
 //                    TextWebSocketFrame tt = new TextWebSocketFrame(simpleDateFormat.format(new Date())+"   "+"自己"+" : " + text);
 //                    ChannelList.sendToId(tt,ctx.channel().id().asShortText());
-                }
             }
+        }}
+    private void handlerWebSocketFrame(ChannelHandlerContext ctx,WebSocketFrame frame){
+
+        if(frame instanceof CloseWebSocketFrame){
+            log.info("服务器收到CloseWebSocketFrame......");
+            //关闭
+            handshaker.close(ctx.channel(), (CloseWebSocketFrame) frame.retain());
+            return;
+        }
+        if(frame instanceof PingWebSocketFrame) {
+            log.info("服务器收到PingWebSocketFrame......");
+            //ping消息
+            ctx.channel().write(new PongWebSocketFrame(frame.content()).retain());
+            return;
         }
 
     }
