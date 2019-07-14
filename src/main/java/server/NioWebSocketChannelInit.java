@@ -27,7 +27,7 @@ public class NioWebSocketChannelInit extends ChannelInitializer<SocketChannel>{
         ch.pipeline().addLast("aggregator",new HttpObjectAggregator(102400));
         ch.pipeline().addLast("http-chunked",new ChunkedWriteHandler());
        // ch.pipeline().addLast("web-compress",new WebSocketServerCompressionHandler());
-        ch.pipeline().addLast(new WebSocketServerProtocolHandler("/websocket"));
+//        ch.pipeline().addLast(new WebSocketServerProtocolHandler("/websocket"));
         ch.pipeline().addLast("handler",new MessageServerHandler());
 //        ch.pipeline().addLast("handler",new StringServerHandler());
     }
