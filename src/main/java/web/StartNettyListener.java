@@ -6,9 +6,9 @@ import org.apache.log4j.Logger;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
-public class StartAddDataListener  implements ServletContextListener {
+public class StartNettyListener  implements ServletContextListener {
 
-    private static final Logger log = Logger.getLogger(StartAddDataListener.class);
+    private static final Logger log = Logger.getLogger(StartNettyListener.class);
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
         log.info("开始启动Netty...");
