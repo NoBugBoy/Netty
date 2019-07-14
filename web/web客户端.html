@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+    <meta charset="UTF-8">  
+    <title>web socket 客户端</title>  
+</head>  
+<body>
+  
+<div style="width: 600px;height: 400px;">  
+    <p>在线人数: <font id="ftt"></font></p>
+    <p>服务器输出:</p>  
+    <div style="border: 1px solid #CCC;height: 300px;overflow: scroll" id="server-msg-container">  
+  
+    </div> 
+	<select  onchange="fun()" id="server-list-container" style="border: 1px solid #CCC;height: 30px;overflow: scroll">
+
+	</select >
+    <p>  
+        <textarea id="inp-msg" style="height: 50px;width: 500px" value=""></textarea><input type="button" value="发送" id="send"><br/>  
+        
+    </p>  
+</div>  
+  
+<script type="application/javascript">  
+    var xxxid = 0;
+	var myip = "0.0.0.0";
+	var size = 0;
+	//106.52.40.24
+    var ws = new WebSocket("ws://localhost:8080");  
+    ws.onopen = function (ev) {  
+		  console.info("onopen", ev);
+		         var inpMsg = document.getElementById("server-msg-container");  
+			     inpMsg.innerHTML += "连接成功.." + "<br/>";  
+      ws.send("myip");  
+    };  
+	function fun(){
+		 var inpMsg = document.getElementById("server-list-container");  
+		 xxxid = inpMsg.value;
+		
+		
+	}
+    ws.onmessage = function (ev) {  
+        console.info("onmessage", ev);  
+
+        var inpMsg = document.getElementById("server-msg-container");  
+		   var rlist = document.getElementById("server-list-container"); 
+		   size = rlist.length-1;
+		    var ftt = document.getElementById("ftt"); 
+			ftt.innerHTML=size;
+        if (typeof  ev.data === "string") {  
+			if(ev.data.indexOf("list") == 0){
+				var result=ev.data.split(",");
+				 console.info("result", result);  
+				 rlist.innerHTML='';
+                var op = new Option("全部");
+				op.value = 0;
+				rlist.add(op);
+				for(var i=1;i<result.length-1;i++){
+					var op = new Option(result[i].split("_")[0]);
+					if(result[i].split("_")[0] == myip){
+						op = new Option("自己");
+					}
+					op.value = result[i].split("_")[1];
+					if(op.value == xxxid){
+						op.selected = true;
+					}
+					 rlist.add(op);
+					  //rlist.innerHTML +=  result[i] + "<br/>";
+					}
+				
+			}else{
+				if(ev.data.indexOf("myip") == 0){
+					myip = ev.data.split("_")[1];
+				}else{
+					inpMsg.innerHTML += ev.data + "<br/>";  
+				}
+			}
+            
+        }
+    };  
+    ws.onerror = function () {  
+        var inpMsg = document.getElementById("server-msg-container");  
+        inpMsg.innerHTML += "发生异常" + "<br/>";  
+    };  
+    ws.onclose = function () {  
+        var inpMsg = document.getElementById("server-msg-container");  
+        inpMsg.innerHTML += "webSocket 关闭" + "<br/>";  
+    };  
+  
+
+    document.getElementById("send").addEventListener("click", function () {  
+		var text = document.getElementById("inp-msg").value;
+	
+		if(xxxid!=0){
+			ws.send(xxxid+"_"+text);  
+		}else{
+			  ws.send(text);  
+		}
+		document.getElementById("inp-msg").value="";
+      
+    }, false);  
+  
+  
+</script>  
+  
+</body>  
+</html>  
